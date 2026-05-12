@@ -1,0 +1,88 @@
+{
+	"name": "DS_Blob_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Blob_Storage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().filename",
+					"type": "Expression"
+				},
+				"container": "source-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "String"
+			},
+			{
+				"name": "first_name",
+				"type": "String"
+			},
+			{
+				"name": "last_name",
+				"type": "String"
+			},
+			{
+				"name": "email",
+				"type": "String"
+			},
+			{
+				"name": "phone",
+				"type": "String"
+			},
+			{
+				"name": "city",
+				"type": "String"
+			},
+			{
+				"name": "state",
+				"type": "String"
+			},
+			{
+				"name": "pincode",
+				"type": "String"
+			},
+			{
+				"name": "tier",
+				"type": "String"
+			},
+			{
+				"name": "segment",
+				"type": "String"
+			},
+			{
+				"name": "registration_date",
+				"type": "String"
+			},
+			{
+				"name": "is_active",
+				"type": "String"
+			},
+			{
+				"name": "credit_limit",
+				"type": "String"
+			},
+			{
+				"name": "loyalty_points",
+				"type": "String"
+			}
+		]
+	}
+}
