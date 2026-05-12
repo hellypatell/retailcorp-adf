@@ -1,0 +1,77 @@
+{
+	"name": "df_load_dim_products",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Blob_csv",
+						"type": "DatasetReference"
+					},
+					"name": "sourceProducts"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sql_table",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimProducts"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedProducts"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          product_id as string,",
+				"          product_name as string,",
+				"          category as string,",
+				"          sub_category as string,",
+				"          supplier_id as string,",
+				"          unit_price as double,",
+				"          cost_price as double,",
+				"          stock_quantity as short,",
+				"          reorder_level as short,",
+				"          weight_kg as double,",
+				"          is_active as integer,",
+				"          launch_date as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourceProducts",
+				"sourceProducts derive(is_discontinued = iif(is_active == 0, 1, 0)) ~> derivedProducts",
+				"derivedProducts sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          product_id,",
+				"          product_name,",
+				"          category,",
+				"          sub_category,",
+				"          supplier_id,",
+				"          unit_price,",
+				"          cost_price,",
+				"          stock_quantity,",
+				"          reorder_level,",
+				"          weight_kg,",
+				"          is_active,",
+				"          launch_date,",
+				"          is_discontinued",
+				"     )) ~> sinkDimProducts"
+			]
+		}
+	}
+}
