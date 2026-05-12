@@ -5,11 +5,11 @@
 		"factoryName": {
 			"value": "adf-retailcorp-2026"
 		},
+		"ls_Blob_Storage_connectionString": {
+			"value": ""
+		},
 		"ls_key_vault_properties_typeProperties_baseUrl": {
 			"value": "https://kv-retailcorp-2026.vault.azure.net/"
-		},
-		"ls_Blob_Storage_properties_typeProperties_connectionString_secretName": {
-			"value": "storage-account-key"
 		},
 		"ls_Azure_Sql_properties_typeProperties_server": {
 			"value": "snreatil.database.windows.net"

@@ -7,13 +7,13 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-retailcorp-2026"
 		},
+		"ls_Blob_Storage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_Blob_Storage'"
+		},
 		"ls_key_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-retailcorp-2026.vault.azure.net/"
-		},
-		"ls_Blob_Storage_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "storage-account-key"
 		},
 		"ls_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
@@ -53,20 +53,10 @@
 				"annotations": [],
 				"type": "AzureBlobStorage",
 				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "ls_key_vault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "[parameters('ls_Blob_Storage_properties_typeProperties_connectionString_secretName')]",
-						"secretVersion": "03b8f1e0cb9f465295f0ebb63d6bcc88"
-					}
+					"connectionString": "[parameters('ls_Blob_Storage_connectionString')]"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_key_vault')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ls_Azure_Sql')]",
