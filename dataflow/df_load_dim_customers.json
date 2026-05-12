@@ -1,0 +1,64 @@
+{
+	"name": "df_load_dim_customers",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Blob_csv",
+						"type": "DatasetReference"
+					},
+					"name": "sourceCustomers"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sql_table",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimCustomers"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterActiveCustomers"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          email as string,",
+				"          phone as string,",
+				"          city as string,",
+				"          state as string,",
+				"          pincode as string,",
+				"          tier as string,",
+				"          segment as string,",
+				"          registration_date as date,",
+				"          is_active as integer,",
+				"          credit_limit as decimal(10,0),",
+				"          loyalty_points as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourceCustomers",
+				"sourceCustomers filter(is_active == 1) ~> filterActiveCustomers",
+				"filterActiveCustomers sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimCustomers"
+			]
+		}
+	}
+}
