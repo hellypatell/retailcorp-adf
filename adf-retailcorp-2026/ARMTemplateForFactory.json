@@ -362,6 +362,78 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/df_load_dim_employee')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "JsonEmplyee",
+								"type": "DatasetReference"
+							},
+							"name": "sourceEmployees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Sql_table",
+								"type": "DatasetReference"
+							},
+							"name": "sinkDimEmployees"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          employee_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          email as string,",
+						"          phone as string,",
+						"          department as string,",
+						"          designation as string,",
+						"          city as string,",
+						"          date_of_joining as string,",
+						"          date_of_birth as string,",
+						"          education as string,",
+						"          base_salary as double,",
+						"          performance_rating as double,",
+						"          manager_id as string,",
+						"          is_active as boolean,",
+						"          annual_leaves_remaining as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine') ~> sourceEmployees",
+						"sourceEmployees derive(is_manager = iif(isNull(manager_id), 0, 1)) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimEmployees"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/JsonEmplyee')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Sql_table')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/df_load_dim_products')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -510,6 +582,82 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_Blob_csv')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Sql_table')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/JsonEmplyee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_Blob_Storage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employees.json",
+						"container": "source-data"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"employee_id": {
+							"type": "string"
+						},
+						"first_name": {
+							"type": "string"
+						},
+						"last_name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string"
+						},
+						"phone": {
+							"type": "string"
+						},
+						"department": {
+							"type": "string"
+						},
+						"designation": {
+							"type": "string"
+						},
+						"city": {
+							"type": "string"
+						},
+						"date_of_joining": {
+							"type": "string"
+						},
+						"date_of_birth": {
+							"type": "string"
+						},
+						"education": {
+							"type": "string"
+						},
+						"base_salary": {
+							"type": "number"
+						},
+						"performance_rating": {
+							"type": "number"
+						},
+						"manager_id": {
+							"type": "null"
+						},
+						"is_active": {
+							"type": "boolean"
+						},
+						"annual_leaves_remaining": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_Blob_Storage')]"
 			]
 		}
 	]
