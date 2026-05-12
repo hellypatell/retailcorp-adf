@@ -11,10 +11,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_Blob_Storage'"
 		},
-		"ls_key_vault_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://kv-retailcorp-2026.vault.azure.net/"
-		},
 		"ls_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "snreatil.database.windows.net"
@@ -26,6 +22,10 @@
 		"ls_Azure_Sql_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "adminuser"
+		},
+		"ls_key_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-retailcorp-2026.vault.azure.net/"
 		},
 		"containerUri": {
 			"type": "string",
