@@ -1,0 +1,24 @@
+{
+	"name": "ls_Azure_Sql",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "snreatil.database.windows.net",
+			"database": "RetailCorpDW",
+			"encrypt": "mandatory",
+			"trustServerCertificate": true,
+			"authenticationType": "SQL",
+			"userName": "adminuser",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_key_vault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sql-password",
+				"secretVersion": "c0817cdd1e614f909b289b876ffecaa2"
+			}
+		}
+	}
+}
