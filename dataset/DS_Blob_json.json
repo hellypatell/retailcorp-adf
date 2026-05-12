@@ -1,0 +1,27 @@
+{
+	"name": "DS_Blob_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Blob_Storage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().filename",
+					"type": "Expression"
+				},
+				"container": "source-data"
+			}
+		},
+		"schema": {}
+	}
+}
