@@ -1,0 +1,25 @@
+{
+	"name": "df_load_dim_employee",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Blob_json",
+						"type": "DatasetReference"
+					},
+					"name": "sourceEmployees"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> sourceEmployees"
+			]
+		}
+	}
+}
