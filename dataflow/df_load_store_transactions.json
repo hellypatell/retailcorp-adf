@@ -1,0 +1,85 @@
+{
+	"name": "df_load_store_transactions",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Blob_csv",
+						"type": "DatasetReference"
+					},
+					"name": "srcStoreTransactions"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sql_table",
+						"type": "DatasetReference"
+					},
+					"name": "sinkFactStoreTransactions"
+				}
+			],
+			"transformations": [
+				{
+					"name": "drvTransactionColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          transaction_id as string,",
+				"          store_id as string,",
+				"          store_name as string,",
+				"          city as string,",
+				"          transaction_date as date,",
+				"          transaction_time as timestamp,",
+				"          cashier_employee_id as string,",
+				"          customer_id as string,",
+				"          num_products as integer,",
+				"          gross_amount as double,",
+				"          discount_amount as double,",
+				"          net_amount as double,",
+				"          payment_mode as string,",
+				"          invoice_number as string,",
+				"          is_returned as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> srcStoreTransactions",
+				"srcStoreTransactions derive(transaction_year = year(transaction_date),",
+				"          transaction_month = month(transaction_date),",
+				"          transaction_time_fixed = toString(transaction_time)) ~> drvTransactionColumns",
+				"drvTransactionColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          transaction_id,",
+				"          store_id,",
+				"          store_name,",
+				"          city,",
+				"          transaction_date,",
+				"          transaction_time,",
+				"          cashier_employee_id,",
+				"          customer_id,",
+				"          num_products,",
+				"          gross_amount,",
+				"          discount_amount,",
+				"          net_amount,",
+				"          payment_mode,",
+				"          invoice_number,",
+				"          is_returned,",
+				"          transaction_year,",
+				"          transaction_month",
+				"     )) ~> sinkFactStoreTransactions"
+			]
+		}
+	}
+}
