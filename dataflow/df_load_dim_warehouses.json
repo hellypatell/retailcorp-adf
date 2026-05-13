@@ -1,0 +1,65 @@
+{
+	"name": "df_load_dim_warehouses",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Json_inventory",
+						"type": "DatasetReference"
+					},
+					"name": "sourceInventory"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sql_table",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregateWarehouses"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          snapshot_id as string,",
+				"          snapshot_date as string,",
+				"          warehouse_id as string,",
+				"          product_id as string,",
+				"          product_name as string,",
+				"          category as string,",
+				"          qty_on_hand as integer,",
+				"          qty_reserved as integer,",
+				"          qty_in_transit as integer,",
+				"          unit_cost as double,",
+				"          total_inventory_value as double,",
+				"          days_of_supply as double,",
+				"          last_received_date as string,",
+				"          reorder_triggered as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments') ~> sourceInventory",
+				"sourceInventory aggregate(groupBy(warehouse_id),",
+				"     warehouse_count = count(warehouse_id)) ~> aggregateWarehouses",
+				"aggregateWarehouses sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+			]
+		}
+	}
+}
