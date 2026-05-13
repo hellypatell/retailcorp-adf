@@ -18,7 +18,7 @@
 						"referenceName": "DS_Sql_table",
 						"type": "DatasetReference"
 					},
-					"name": "sinkDimEmployees"
+					"name": "sinkEmployee"
 				}
 			],
 			"transformations": [
@@ -48,7 +48,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     documentForm: 'documentPerLine') ~> sourceEmployees",
+				"     documentForm: 'arrayOfDocuments') ~> sourceEmployees",
 				"sourceEmployees derive(is_manager = iif(isNull(manager_id), 0, 1)) ~> derivedColumn1",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -56,10 +56,11 @@
 				"     insertable:true,",
 				"     updateable:false,",
 				"     upsertable:false,",
+				"     truncate:true,",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimEmployees"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkEmployee"
 			]
 		}
 	}
