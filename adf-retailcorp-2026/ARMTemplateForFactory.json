@@ -237,6 +237,82 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/JsonEmplyee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_Blob_Storage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employees.json",
+						"container": "source-data"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"employee_id": {
+							"type": "string"
+						},
+						"first_name": {
+							"type": "string"
+						},
+						"last_name": {
+							"type": "string"
+						},
+						"email": {
+							"type": "string"
+						},
+						"phone": {
+							"type": "string"
+						},
+						"department": {
+							"type": "string"
+						},
+						"designation": {
+							"type": "string"
+						},
+						"city": {
+							"type": "string"
+						},
+						"date_of_joining": {
+							"type": "string"
+						},
+						"date_of_birth": {
+							"type": "string"
+						},
+						"education": {
+							"type": "string"
+						},
+						"base_salary": {
+							"type": "number"
+						},
+						"performance_rating": {
+							"type": "number"
+						},
+						"manager_id": {
+							"type": "null"
+						},
+						"is_active": {
+							"type": "boolean"
+						},
+						"annual_leaves_remaining": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_Blob_Storage')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_Azure_Sql')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -383,7 +459,7 @@
 								"referenceName": "DS_Sql_table",
 								"type": "DatasetReference"
 							},
-							"name": "sinkDimEmployees"
+							"name": "sinkEmployee"
 						}
 					],
 					"transformations": [
@@ -413,7 +489,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine') ~> sourceEmployees",
+						"     documentForm: 'arrayOfDocuments') ~> sourceEmployees",
 						"sourceEmployees derive(is_manager = iif(isNull(manager_id), 0, 1)) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -421,10 +497,11 @@
 						"     insertable:true,",
 						"     updateable:false,",
 						"     upsertable:false,",
+						"     truncate:true,",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimEmployees"
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkEmployee"
 					]
 				}
 			},
@@ -585,7 +662,78 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/JsonEmplyee')]",
+			"name": "[concat(parameters('factoryName'), '/df_load_dim_warehouses')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Json_inventory",
+								"type": "DatasetReference"
+							},
+							"name": "sourceInventory"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Sql_table",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "aggregateWarehouses"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          snapshot_id as string,",
+						"          snapshot_date as string,",
+						"          warehouse_id as string,",
+						"          product_id as string,",
+						"          product_name as string,",
+						"          category as string,",
+						"          qty_on_hand as integer,",
+						"          qty_reserved as integer,",
+						"          qty_in_transit as integer,",
+						"          unit_cost as double,",
+						"          total_inventory_value as double,",
+						"          days_of_supply as double,",
+						"          last_received_date as string,",
+						"          reorder_triggered as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> sourceInventory",
+						"sourceInventory aggregate(groupBy(warehouse_id),",
+						"     warehouse_count = count(warehouse_id)) ~> aggregateWarehouses",
+						"aggregateWarehouses sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Json_inventory')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Sql_table')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Json_inventory')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -598,66 +746,309 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"fileName": "employees.json",
+						"fileName": "inventory_snapshots.json",
 						"container": "source-data"
 					}
 				},
 				"schema": {
 					"type": "object",
 					"properties": {
-						"employee_id": {
+						"snapshot_id": {
 							"type": "string"
 						},
-						"first_name": {
+						"snapshot_date": {
 							"type": "string"
 						},
-						"last_name": {
+						"warehouse_id": {
 							"type": "string"
 						},
-						"email": {
+						"product_id": {
 							"type": "string"
 						},
-						"phone": {
+						"product_name": {
 							"type": "string"
 						},
-						"department": {
+						"category": {
 							"type": "string"
 						},
-						"designation": {
-							"type": "string"
-						},
-						"city": {
-							"type": "string"
-						},
-						"date_of_joining": {
-							"type": "string"
-						},
-						"date_of_birth": {
-							"type": "string"
-						},
-						"education": {
-							"type": "string"
-						},
-						"base_salary": {
-							"type": "number"
-						},
-						"performance_rating": {
-							"type": "number"
-						},
-						"manager_id": {
-							"type": "null"
-						},
-						"is_active": {
-							"type": "boolean"
-						},
-						"annual_leaves_remaining": {
+						"qty_on_hand": {
 							"type": "integer"
+						},
+						"qty_reserved": {
+							"type": "integer"
+						},
+						"qty_in_transit": {
+							"type": "integer"
+						},
+						"unit_cost": {
+							"type": "number"
+						},
+						"total_inventory_value": {
+							"type": "number"
+						},
+						"days_of_supply": {
+							"type": "number"
+						},
+						"last_received_date": {
+							"type": "string"
+						},
+						"reorder_triggered": {
+							"type": "boolean"
 						}
 					}
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_Blob_Storage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/JsonOrders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_Blob_Storage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "orders.json",
+						"container": "source-data"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"order_id": {
+							"type": "string"
+						},
+						"customer_id": {
+							"type": "string"
+						},
+						"order_date": {
+							"type": "string"
+						},
+						"order_time": {
+							"type": "string"
+						},
+						"channel": {
+							"type": "string"
+						},
+						"status": {
+							"type": "string"
+						},
+						"payment_mode": {
+							"type": "string"
+						},
+						"subtotal_amount": {
+							"type": "number"
+						},
+						"tax_amount": {
+							"type": "number"
+						},
+						"shipping_charge": {
+							"type": "integer"
+						},
+						"total_amount": {
+							"type": "number"
+						},
+						"delivery_city": {
+							"type": "string"
+						},
+						"warehouse_id": {
+							"type": "string"
+						},
+						"is_gift": {
+							"type": "boolean"
+						},
+						"expected_delivery_date": {
+							"type": "string"
+						},
+						"actual_delivery_date": {
+							"type": "string"
+						},
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"order_id": {
+										"type": "string"
+									},
+									"product_id": {
+										"type": "string"
+									},
+									"product_name": {
+										"type": "string"
+									},
+									"quantity": {
+										"type": "integer"
+									},
+									"unit_price": {
+										"type": "number"
+									},
+									"discount_pct": {
+										"type": "number"
+									},
+									"line_total": {
+										"type": "number"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_Blob_Storage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_load_fact_orders')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "JsonOrders",
+								"type": "DatasetReference"
+							},
+							"name": "sourceOrders"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Sql_table",
+								"type": "DatasetReference"
+							},
+							"name": "sinkOrdersItems"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_Sql_table",
+								"type": "DatasetReference"
+							},
+							"name": "sinkFactOrders"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FlattenFactOrders"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          order_id as string,",
+						"          customer_id as string,",
+						"          order_date as date,",
+						"          order_time as timestamp,",
+						"          channel as string,",
+						"          status as string,",
+						"          payment_mode as decimal(10,0),",
+						"          subtotal_amount as decimal(10,0),",
+						"          tax_amount as decimal(10,0),",
+						"          shipping_charge as decimal(10,0),",
+						"          total_amount as decimal(10,0),",
+						"          delivery_city as string,",
+						"          warehouse_id as string,",
+						"          is_gift as boolean,",
+						"          expected_delivery_date as date,",
+						"          actual_delivery_date as date,",
+						"          items as (order_id as string, product_id as string, product_name as string, quantity as integer, unit_price as double, discount_pct as double, line_total as double)[]",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> sourceOrders",
+						"sourceOrders foldDown(unroll(items, items),",
+						"     mapColumn(",
+						"          order_id,",
+						"          customer_id,",
+						"          order_date,",
+						"          order_time,",
+						"          channel,",
+						"          status,",
+						"          payment_mode,",
+						"          subtotal_amount,",
+						"          tax_amount,",
+						"          shipping_charge,",
+						"          total_amount,",
+						"          delivery_city,",
+						"          warehouse_id,",
+						"          is_gift,",
+						"          expected_delivery_date,",
+						"          actual_delivery_date,",
+						"          {items.order_id} = items.order_id,",
+						"          {items.product_id} = items.product_id,",
+						"          {items.product_name} = items.product_name,",
+						"          {items.quantity} = items.quantity,",
+						"          {items.unit_price} = items.unit_price,",
+						"          {items.discount_pct} = items.discount_pct,",
+						"          {items.line_total} = items.line_total",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenFactOrders",
+						"FlattenFactOrders sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          {items.order_id},",
+						"          {items.product_id},",
+						"          {items.product_name},",
+						"          {items.quantity},",
+						"          {items.unit_price},",
+						"          {items.discount_pct},",
+						"          {items.line_total}",
+						"     )) ~> sinkOrdersItems",
+						"FlattenFactOrders sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          order_id,",
+						"          customer_id,",
+						"          order_date,",
+						"          order_time,",
+						"          channel,",
+						"          status,",
+						"          payment_mode,",
+						"          subtotal_amount,",
+						"          tax_amount,",
+						"          shipping_charge,",
+						"          total_amount,",
+						"          delivery_city,",
+						"          warehouse_id,",
+						"          is_gift,",
+						"          expected_delivery_date,",
+						"          actual_delivery_date",
+						"     )) ~> sinkFactOrders"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/JsonOrders')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Sql_table')]"
 			]
 		}
 	]
